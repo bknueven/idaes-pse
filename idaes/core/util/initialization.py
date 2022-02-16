@@ -58,19 +58,23 @@ def fix_state_vars(blk, state_args=None):
 
     flags = {}
     for k in blk.keys():
+        if k in state_args:
+            state_args_k = state_args[k]
+        else:
+            state_args_k = state_args
         for n, v in blk[k].define_state_vars().items():
             for i in v:
                 flags[k, n, i] = v[i].is_fixed()
 
                 # If not fixed, fix at either guess provided or current value
                 if not v[i].is_fixed():
-                    if n in state_args:
+                    if n in state_args_k:
                         # Try to get initial guess from state_args
                         try:
                             if i is None:
-                                val = state_args[n]
+                                val = state_args_k[n]
                             else:
-                                val = state_args[n][i]
+                                val = state_args_k[n][i]
                         except KeyError:
                             raise ConfigurationError(
                                 'Indexes in state_args did not agree with '
