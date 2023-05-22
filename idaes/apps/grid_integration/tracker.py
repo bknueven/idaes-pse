@@ -312,7 +312,15 @@ class Tracker:
         self._pass_market_dispatch(market_dispatch)
 
         # solve the model
-        self.solver.solve(self.model, tee=False)
+        results = self.solver.solve(self.model, tee=False)
+        if not pyo.check_optimal_termination(results):
+            from pyomo.contrib.iis import write_iis
+            try:
+                file_name = write_iis( model, "bad_tracker.ilp" )
+                print(f"Infeasible bidder model IIS written to {file_name}")
+            except:
+                pass
+            raise RuntimeError("infeasible tracker model")
 
         self.record_results(date=date, hour=hour)
 

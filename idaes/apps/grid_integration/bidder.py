@@ -511,7 +511,15 @@ class StochasticProgramBidder(AbstractBidder):
         # update the price forecasts
         self._pass_price_forecasts(model, day_ahead_price, real_time_energy_price)
 
-        self.solver.solve(model, tee=True)
+        results = self.solver.solve(model, tee=True)
+        if not pyo.check_optimal_termination(results):
+            from pyomo.contrib.iis import write_iis
+            try:
+                file_name = write_iis( model, "bad_bidder.ilp" )
+                print(f"Infeasible bidder model IIS written to {file_name}")
+            except:
+                pass
+            raise RuntimeError("infeasible bidder model")
 
         bids = self._assemble_bids(
             model,
